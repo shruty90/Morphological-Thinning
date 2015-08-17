@@ -20,8 +20,8 @@ Output: thinned binary Image of 1 pixel thickness
 #include		<time.h>
 
 
-
-#include		"mainheader.h"
+//include the corresponding header file
+//#include		"mainheader.h"
 
 /////////////
 
@@ -50,6 +50,7 @@ unsigned char** MorphThinning(unsigned char **InputImg, int width, int height)
 	new_width = new_width + 2;
 	new_height = new_height + 2;
 	
+	//allocate memory for a copy of the input image
 	OriginalImage = (unsigned char**)malloc(height* sizeof(unsigned char*));	
 	for (int i = 0; i < height; i++)
 	{
@@ -60,6 +61,7 @@ unsigned char** MorphThinning(unsigned char **InputImg, int width, int height)
 		fprintf(stderr, "\n Memory allocation failed");
 		exit(1);
 	}
+	//initialise the input image
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
@@ -70,7 +72,7 @@ unsigned char** MorphThinning(unsigned char **InputImg, int width, int height)
 	int difference = 0;
 	int flag = 0;
 			
-	//copying the thresholded image into original image
+	//copying the input image into original image
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
@@ -80,15 +82,15 @@ unsigned char** MorphThinning(unsigned char **InputImg, int width, int height)
 	}	
 
 	int g = 0;
-	while (converged!=1)
+	while (converged!=1) //check if input image==end image
 	{
-		CondtionalImage = Condition1(OriginalImage,InputImg, height, width);
-		EndImage = Condition2(CondtionalImage, height, width);
+		CondtionalImage = Condition1(OriginalImage,InputImg, height, width); //result of first condition check 
+		EndImage = Condition2(CondtionalImage, height, width); //result of first condition check passed as input and second condition check performed
 		for (y = 0; y < height; y++)
 		{
 			for (x = 0; x < width; x++)
 			{							
-				difference = abs(InputImg[y][x] - EndImage[y][x]);
+				difference = abs(InputImg[y][x] - EndImage[y][x]); //compute the final difference between the original image and the end image
 				
 			}
 		}//end of y	
@@ -117,11 +119,11 @@ unsigned char **Condition1(unsigned char **OriginalImage, unsigned char **InputI
 	for (int j = 0; j < black_pixels; j++)
 	{   
 		int indx, indy = 0;
-		indx = Index[j][1];
+		indx = Index[j][1]; //get the black pixel co-ord
 		indy = Index[j][0];	
-		if ((indx <= width - 1 && indx >= 1) && (indy <= height - 1 && indy >= 1))
-		{
-			Mask[1][1] = OriginalImage[indy][indx];
+		if ((indx <= width - 1 && indx >= 1) && (indy <= height - 1 && indy >= 1)) //condition as there is no padding
+		{   //create a 4x4 mask
+			Mask[1][1] = OriginalImage[indy][indx]; //central pixel
 			Mask[0][0] = OriginalImage[indy - 1][indx - 1];
 			Mask[0][1] = OriginalImage[indy - 1][indx];
 			Mask[0][2] = OriginalImage[indy - 1][indx + 1];
@@ -134,6 +136,7 @@ unsigned char **Condition1(unsigned char **OriginalImage, unsigned char **InputI
 
 		//**********Start Condition check***********************************************
 
+		//check for the neighbors of the central pixel
 		if (Mask[1][2] == 0 && (Mask[0][2] == 1 || Mask[0][1]) == 1)
 
 			b1 = 1;
@@ -169,8 +172,8 @@ unsigned char **Condition1(unsigned char **OriginalImage, unsigned char **InputI
 			}
 		}
 		int Ncondition2;
-		N1 = (double)(Mask[1][2] | Mask[0][2]) +(double)(Mask[0][1] | Mask[0][0]) + (double)(Mask[1][0] | Mask[2][0]) + (double)(Mask[2][1] | Mask[2][2]);
-		N2 = (double)(Mask[0][2] | Mask[0][1]) + (double)(Mask[0][0] | Mask[1][0]) + (double)(Mask[2][0] | Mask[2][1]) + (double)(Mask[2][2] | Mask[1][2]);
+		N1 = (Mask[1][2] | Mask[0][2]) +(Mask[0][1] | Mask[0][0]) + (Mask[1][0] | Mask[2][0]) + (Mask[2][1] | Mask[2][2]);
+		N2 = (Mask[0][2] | Mask[0][1]) + (Mask[0][0] | Mask[1][0]) + (Mask[2][0] | Mask[2][1]) + (Mask[2][2] | Mask[1][2]);
 		Ncondition2 = (N1 < N2 ? N1 : N2);
 		//printf("%d \n", Ncondition2);
 
@@ -193,8 +196,8 @@ unsigned char **Condition1(unsigned char **OriginalImage, unsigned char **InputI
 
 		//**********************************************************************************************
 
-		if (Ncondition3 == 0 && Ncondition2 >= 2 && Ncondition2 <= 3 && b == 1)
-			OriginalImage[indy][indx] = 0;
+		if (Ncondition3 == 0 && Ncondition2 >= 2 && Ncondition2 <= 3 && b == 1) //if this condition is satisfied erode the central pixel and merge with background.
+		OriginalImage[indy][indx] = 0; 
 
   }// for j= num of black pixels loop
   return(OriginalImage);
@@ -214,7 +217,7 @@ unsigned char **Condition2(unsigned char **ConditionalImage,int height,int width
 		indy = Index[j][0];
 		if ((indx <= width - 1 && indx >= 1) && (indy <= height - 1 && indy >= 1))
 		{
-			Mask[1][1] = ConditionalImage[indy][indx];
+			Mask[1][1] = ConditionalImage[indy][indx]; //central pixel
 			Mask[0][0] = ConditionalImage[indy - 1][indx - 1];
 			Mask[0][1] = ConditionalImage[indy - 1][indx];
 			Mask[0][2] = ConditionalImage[indy - 1][indx + 1];
@@ -254,16 +257,15 @@ unsigned char **Condition2(unsigned char **ConditionalImage,int height,int width
 			for (int j = 0; j <= 2; j++)
 			{
 				if (Mask[i][j] == 0)
-					Mask[i][j] = 0;
-				else if (Mask[i][j] == 1)
-
+					Mask[i][j] = 0; //let it remain a background pixel
+				else if (Mask[i][j] == 1) //if it is a black pixel erode it ,make it a white pixel
 					Mask[i][j] = 0;
 			}
 		}
 
 		int Ncondition2;
-		N1 = (double)(Mask[1][2] | Mask[0][2]) + (double)(Mask[0][1] | Mask[0][0]) + (double)(Mask[1][0] | Mask[2][0]) + (double)(Mask[2][1] | Mask[2][2]);
-		N2 = (double)(Mask[0][2] | Mask[0][1]) + (double)(Mask[0][0] | Mask[1][0]) + (double)(Mask[2][0] | Mask[2][1]) + (double)(Mask[2][2] | Mask[1][2]);
+		N1 = (Mask[1][2] | Mask[0][2]) + (Mask[0][1] | Mask[0][0]) + (Mask[1][0] | Mask[2][0]) + (Mask[2][1] | Mask[2][2]);
+		N2 = (Mask[0][2] | Mask[0][1]) + (Mask[0][0] | Mask[1][0]) + (Mask[2][0] | Mask[2][1]) + (Mask[2][2] | Mask[1][2]);
 		Ncondition2 = (N1 < N2 ? N1 : N2);
 
 		//*******************************Condition 3***************************************************
@@ -295,7 +297,7 @@ unsigned char **Condition2(unsigned char **ConditionalImage,int height,int width
 	
 }//end of function condition2
 
-
+// Returns the number of black pixels( foreground)
 int No_Pixels(unsigned char**InputImg, int height, int width,int find)
 {
 	int total = 0;
@@ -310,6 +312,7 @@ int No_Pixels(unsigned char**InputImg, int height, int width,int find)
 	return total;
 
 }
+//this function returns the position of the black pixels in the image
 int **Indices(unsigned char**InputImg, int height, int width)
 { 
 	int ind = 0;
